@@ -16,5 +16,6 @@ public class CustomMessageReceiveHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         // 得到在上一个Handler中处理完成的数据，用于实现自己的业务逻辑
         log.info("channelRead, message: {}", msg);
+        ctx.fireChannelRead(msg);
     }
 }

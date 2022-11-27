@@ -2,8 +2,11 @@ package com.passer.demo.netty.handler;
 
 import com.passer.demo.netty.domain.Message;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOutboundHandlerAdapter;
+import io.netty.channel.ChannelPromise;
 
 import java.util.UUID;
 
@@ -15,8 +18,6 @@ public class CustomMessageSendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        super.channelActive(ctx);
-
         Channel channel = ctx.channel();
 
         Message message = new Message();
@@ -27,6 +28,9 @@ public class CustomMessageSendHandler extends ChannelInboundHandlerAdapter {
 
         if (channel != null && channel.isWritable()) {
             channel.writeAndFlush(message);
+            channel.close();
         }
+
+        super.channelActive(ctx);
     }
 }
