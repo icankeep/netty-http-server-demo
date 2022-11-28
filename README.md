@@ -54,8 +54,6 @@
 ![NioSocketChannel](docs/imgs/NioSocketChannel-class.png)
 
 
-
-
 ### ChannelHandlerContext 
 ==> 
 - DefaultChannelHandlerContext 
@@ -76,7 +74,7 @@
 - ChannelDuplexHandler （既处理InBound也处理OutBound）
 - SimpleChannelInboundHandler (可以用于处理特定类型的消息)
 - ChannelInitializer 
-- Encoder Decoder
+- Encoder Decoder （TCP粘包/拆包）
 
 // todo 补充更多的编解码 tcp粘包
 
@@ -85,6 +83,73 @@
 2. 通过使用`ChannelHandlerContext`对象，`ChannelHandler`可以向上游或下游传递事件，动态修改管道，或存储特定于处理程序的信息（使用`AttributeKeys`）。 
    
 一个ChannelHandler可以对应多个ChannelHandlerContext (ChannelHandler.Sharable)
+
+#### 几种常见的Handler
+##### DelimiterBasedFrameDecoder
+通过指定的字符切割ByteBuf，将ByteBuf解码为Message
+
+构造器
+```java
+ /**
+  * Creates a new instance.
+  *
+  * @param maxFrameLength  the maximum length of the decoded frame.
+  *                        A {@link TooLongFrameException} is thrown if
+  *                        the length of the frame exceeds this value. (最大长度，如果超过直接异常)
+  * @param stripDelimiter  whether the decoded frame should strip out the
+  *                        delimiter or not （数据中是否保留分割符）
+  * @param failFast  If <tt>true</tt>, a {@link TooLongFrameException} is
+  *                  thrown as soon as the decoder notices the length of the
+  *                  frame will exceed <tt>maxFrameLength</tt> regardless of
+  *                  whether the entire frame has been read.
+  *                  If <tt>false</tt>, a {@link TooLongFrameException} is
+  *                  thrown after the entire frame that exceeds
+  *                  <tt>maxFrameLength</tt> has been read.
+  * @param delimiters  the delimiters （支持多个分割符）
+  */
+ public DelimiterBasedFrameDecoder(
+         int maxFrameLength, boolean stripDelimiter, boolean failFast, ByteBuf... delimiters) {}
+```
+##### LineBasedFrameDecoder
+按行(\n 或 \r\n)解码ByteBuf转为Obj
+
+##### FixedLengthFrameDecoder
+固定长度解码ByteBuf转为Obj
+
+##### LengthFieldBasedFrameDecoder
+通过长度的字段标识消息长度
+
+构造器参数
+```java
+ /**
+  * Creates a new instance.
+  *
+  * @param byteOrder
+  *        the {@link ByteOrder} of the length field
+  * @param maxFrameLength
+  *        the maximum length of the frame.  If the length of the frame is
+  *        greater than this value, {@link TooLongFrameException} will be
+  *        thrown.
+  * @param lengthFieldOffset
+  *        the offset of the length field
+  * @param lengthFieldLength
+  *        the length of the length field
+  * @param lengthAdjustment
+  *        the compensation value to add to the value of the length field
+  * @param initialBytesToStrip
+  *        the number of first bytes to strip out from the decoded frame
+  * @param failFast
+  *        If <tt>true</tt>, a {@link TooLongFrameException} is thrown as
+  *        soon as the decoder notices the length of the frame will exceed
+  *        <tt>maxFrameLength</tt> regardless of whether the entire frame
+  *        has been read.  If <tt>false</tt>, a {@link TooLongFrameException}
+  *        is thrown after the entire frame that exceeds <tt>maxFrameLength</tt>
+  *        has been read.
+  */
+ public LengthFieldBasedFrameDecoder(
+         ByteOrder byteOrder, int maxFrameLength, int lengthFieldOffset, int lengthFieldLength,
+         int lengthAdjustment, int initialBytesToStrip, boolean failFast) {}
+```
 
 ### ChannelPipeline
 
