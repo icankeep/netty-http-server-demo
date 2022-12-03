@@ -1,0 +1,87 @@
+@startuml
+Actor actor
+actor -> Bootstrap: connect
+activate Bootstrap
+Bootstrap -> Bootstrap: connect
+Bootstrap -> Bootstrap: validate
+Bootstrap -> Bootstrap: doResolveAndConnect
+
+group 初始化和注册
+    activate Bootstrap
+    Bootstrap -> AbstractBoostrap: initAndRegister
+    activate Bootstrap
+    activate AbstractBoostrap
+    AbstractBoostrap -> ChannelFactory: newChannel
+    activate ChannelFactory
+    ChannelFactory --> AbstractBoostrap
+    deactivate ChannelFactory
+    AbstractBoostrap -> Bootstrap: init
+        note right
+            1. 为channel创建pipeline
+            2. 给pipeline添加handler
+            3. setChannelOptions
+            4. setAttributes
+        end note
+    activate Bootstrap
+    return
+    AbstractBoostrap -> SingleThreadEventLoop: register
+    activate SingleThreadEventLoop
+    SingleThreadEventLoop -> AbstractChannel.AbstractUnsafe: register
+    activate AbstractChannel.AbstractUnsafe
+    AbstractChannel.AbstractUnsafe -> AbstractChannel.AbstractUnsafe: register0
+    activate AbstractChannel.AbstractUnsafe
+    AbstractChannel.AbstractUnsafe -> AbstractNioChannel: doRegister
+    activate AbstractNioChannel
+    AbstractNioChannel -> AbstractNioChannel: SelectableChannel register\nops=0
+    AbstractNioChannel --> AbstractChannel.AbstractUnsafe
+    deactivate AbstractNioChannel
+    AbstractChannel.AbstractUnsafe -> DefaultChannelPipeline: invokeHandlerAddedIfNeeded
+    activate DefaultChannelPipeline
+    return
+    AbstractChannel.AbstractUnsafe -> DefaultChannelPipeline: fireChannelRegistered
+    activate DefaultChannelPipeline
+    return
+    alt isActive & firstRegistration
+        AbstractChannel.AbstractUnsafe -> DefaultChannelPipeline: fireChannelActive
+        activate DefaultChannelPipeline
+        return
+    end
+    return
+    return
+    return
+    return
+    deactivate Bootstrap
+end
+
+group 连接
+    Bootstrap -> Bootstrap: doResolveAndConnect0
+    activate Bootstrap
+    Bootstrap -> Bootstrap: doConnect
+    activate Bootstrap
+    Bootstrap -> AbstractChannel: connect
+    activate AbstractChannel
+    AbstractChannel -> DefaultChannelPipeline: connect
+    activate DefaultChannelPipeline
+    DefaultChannelPipeline -> AbstractChannelHandlerContext: connect
+    activate AbstractChannelHandlerContext
+    AbstractChannelHandlerContext -> AbstractChannelHandlerContext: invokeConnect
+    AbstractChannelHandlerContext -> AbstractNioChannel.AbstractNioUnsafe: connect
+    activate AbstractNioChannel.AbstractNioUnsafe
+    alt doConnect返回true(已连接)
+        alt 首次activate
+            AbstractNioChannel.AbstractNioUnsafe -> DefaultChannelPipeline: fireChannelActive
+        end
+    else 如果还未连接成功
+        AbstractNioChannel.AbstractNioUnsafe ->o AbstractNioChannel.AbstractNioUnsafe: 添加连接超时回调处理
+            note right
+                如果有设置连接超时
+                那么会在eventLoop中添加一个schedule
+                指定时间内还未连接则抛出超时异常，关闭连接
+            end note
+    end
+    return
+    return
+    return
+    return
+end
+@enduml

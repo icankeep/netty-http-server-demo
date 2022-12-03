@@ -151,6 +151,10 @@
          int lengthAdjustment, int initialBytesToStrip, boolean failFast) {}
 ```
 
+##### HttpServerCodec
+http server的handler，一般和HttpObjectAggregator组合使用
+
+
 ### ChannelPipeline
 
 核心要点：
@@ -199,4 +203,36 @@
  *  +-------------------------------------------------------------------+
  *
 ```
+
+### HeapBuffer和DirectBuffer
+=>
+- UnpooledByteBufAllocator
+- PooledByteBufAllocator
+
+
+## Netty关键流程
+
+### ServerBootstrap启动流程
+![](docs/imgs/ServerBootstrap%20bind流程.png)
+
+### NioEventLoop事件循环，读事件触发流程
+```html
+NioEventLoop#run
+   => processSelectedKeys 
+   ==> processSelectedKeysOptimized 
+   ===> processSelectedKey
+   ====> AbstractNioByteChannel#read 
+   =====> DefaultChannelPipeline#fireChannelRead
+   =====> DefaultChannelPipeline#fireChannelReadComplete
+```
+
+### client connect
+1. 通过channelFactory new出一个channel
+2. 初始化channel（添加pipeline和一些config），并注册到EventLoopGroup中
+3. address解析  调用channel connect
+4. 调用channel的pipeline connect，从pipline尾部开始分别执行对应context中的handler
+5. 调用Socket的connect
+
+
+![](docs/imgs/Bootstrap%20connect流程.png)
 

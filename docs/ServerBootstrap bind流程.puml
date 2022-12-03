@@ -1,0 +1,78 @@
+@startuml
+participant ServerBootstrap
+ServerBootstrap -> AbstractBootstrap : bind
+activate AbstractBootstrap
+AbstractBootstrap -> AbstractBootstrap : bind
+activate AbstractBootstrap
+AbstractBootstrap -> AbstractBootstrap : validate
+AbstractBootstrap --> AbstractBootstrap
+deactivate AbstractBootstrap
+AbstractBootstrap -> AbstractBootstrap : doBind
+activate AbstractBootstrap
+AbstractBootstrap -> AbstractBootstrap : initAndRegister
+activate AbstractBootstrap
+AbstractBootstrap -> ChannelFactory : newChannel
+activate ChannelFactory
+ChannelFactory --> AbstractBootstrap
+deactivate ChannelFactory
+AbstractBootstrap -> ServerBootstrap : init
+activate ServerBootstrap
+ServerBootstrap -> ServerBootstrap: setChannelOptions
+ServerBootstrap -> ServerBootstrap: setAttributes
+ServerBootstrap -> ServerBootstrap: setAttributes
+ServerBootstrap -> ServerBootstrap: pipeline.addLast(\nnew ServerBootstrapAcceptor(...))
+ServerBootstrap --> AbstractBootstrap
+deactivate ServerBootstrap
+AbstractBootstrap -> EventLoopGroup: register
+activate EventLoopGroup
+EventLoopGroup -> AbstractChannel
+activate AbstractChannel
+AbstractChannel -> AbstractChannel: register0
+activate AbstractChannel
+AbstractChannel -> AbstractNioChannel: doRegister
+activate AbstractNioChannel
+AbstractNioChannel -> AbstractNioChannel: SelectableChannel register\nops=0
+AbstractNioChannel --> AbstractChannel
+deactivate AbstractChannel
+deactivate AbstractNioChannel
+AbstractChannel -> AbtractChannel: pipeline.\nfireChannelRegistered()
+alt isActive & firstRegistration
+    AbstractChannel -> AbstractChannel: pipeline.\nfireChannelActive()
+    note right
+        之后会触发AbstractNioChannel doBeginRead
+        selectionKey.interestOps(interestOps | readInterestOp)
+        将selectionKey从0置为监听读
+    end note
+end
+return
+return
+deactivate AbstractChannel
+deactivate EventLoopGroup
+deactivate AbstractBootstrap
+AbstractBootstrap -> AbstractBootstrap : doBind0
+activate AbstractBootstrap
+AbstractBootstrap -> AbstractChannel: bind
+activate AbstractChannel
+AbstractChannel -> DefaultChannelPipeline: bind
+activate DefaultChannelPipeline
+DefaultChannelPipeline -> AbstractChannelHandlerContext: bind
+activate AbstractChannelHandlerContext
+AbstractChannelHandlerContext -> AbstractChannelHandlerContext: bind
+AbstractChannelHandlerContext -> AbstractChannelHandlerContext: invokeBind
+AbstractChannelHandlerContext -> AbstractChannel: bind
+activate AbstractChannel
+AbstractChannel -> NioServerSocketChannel: doBind
+activate NioServerSocketChannel
+NioServerSocketChannel --> AbstractChannel
+deactivate NioServerSocketChannel
+AbstractChannel --> AbstractChannelHandlerContext
+AbstractChannelHandlerContext --> DefaultChannelPipeline
+deactivate AbstractChannelHandlerContext
+DefaultChannelPipeline --> AbstractChannel
+deactivate DefaultChannelPipeline
+AbstractChannel --> AbstractBootstrap
+deactivate AbstractChannel
+AbstractBootstrap --> ServerBootstrap
+deactivate AbstractBootstrap
+deactivate AbstractBootstrap
+@enduml
