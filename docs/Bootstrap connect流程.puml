@@ -67,7 +67,13 @@ group 连接
     AbstractChannelHandlerContext -> AbstractChannelHandlerContext: invokeConnect
     AbstractChannelHandlerContext -> AbstractNioChannel.AbstractNioUnsafe: connect
     activate AbstractNioChannel.AbstractNioUnsafe
-    alt doConnect返回true(已连接)
+    alt doConnect【SocketUtils.connect】返回true(已连接)
+        note right
+            1. 将Channel注册到EventLoop
+            2. 创建连接异步返回
+            3. NioEventLoop监听到连接事件后触发unsafe.finishConnect()
+            4. 触发pipeline.fireChannelActive
+        end note
         alt 首次activate
             AbstractNioChannel.AbstractNioUnsafe -> DefaultChannelPipeline: fireChannelActive
         end
